@@ -3,76 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Journal Entry</title>
+    <title>Personal Journal</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
+        :root {
+            --bg-light: #f5f5dc;
+            --bg-dark: #121212;
+            --text-light: #333;
+            --text-dark: #fff;
+            --card-light: #fff;
+            --card-dark: #222;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
         body {
             font-family: 'Patrick Hand', cursive;
-            background: #f5f5dc;
-            color: #333;
-            padding: 20px;
+            background: var(--bg-light);
+            color: var(--text-light);
+            transition: background 0.3s, color 0.3s;
         }
         .container {
-            max-width: 600px;
+            display: flex;
+            max-width: 900px;
             margin: auto;
-            background: white;
+            padding: 20px;
+            gap: 20px;
+        }
+        .entries, .new-entry {
+            flex: 1;
+            background: var(--card-light);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px var(--shadow);
         }
-        textarea, input {
+        textarea, input, select {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border-radius: 5px;
         }
         button {
-            padding: 10px 15px;
+            padding: 10px 20px;
             cursor: pointer;
             border-radius: 5px;
-            margin-top: 10px;
+            margin-right: 5px;
+        }
+        .entry {
+            border-bottom: 1px dashed #ccc;
+            padding: 10px;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        .entry:hover {
+            transform: scale(1.02);
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        .dark-mode .entries, .dark-mode .new-entry {
+            background: var(--card-dark);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Edit Entry</h2>
-        <input type="text" id="editTitle" placeholder="Title">
-        <textarea id="editThoughts" placeholder="Write your thoughts..."></textarea>
-        <input type="text" id="editTags" placeholder="Tags (comma separated)">
-        <button onclick="saveEditedEntry()">Save Changes</button>
-        <button onclick="cancelEdit()">Cancel</button>
+        <div class="entries">
+            <h2>Past Entries</h2>
+            <input type="text" id="search" placeholder="Search entries..." onkeyup="filterEntries()">
+            <div id="entries"></div>
+        </div>
+        <div class="new-entry">
+            <h2>New Entry</h2>
+            <input type="text" id="title" placeholder="Title">
+            <textarea id="thoughts" placeholder="Write your thoughts..."></textarea>
+            <input type="text" id="tags" placeholder="Tags (comma separated)">
+            <button onclick="saveEntry()">Save</button>
+            <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        </div>
     </div>
     <script>
-        let entryIndex = localStorage.getItem("editingEntryIndex");
-        let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
+        function saveEntry() {
+            let title = document.getElementById("title").value;
+            let thoughts = document.getElementById("thoughts").value;
+            let tags = document.getElementById("tags").value;
+            let date = new Date().toLocaleString();
 
-        if (entryIndex !== null && entries[entryIndex]) {
-            let entry = entries[entryIndex];
-            document.getElementById("editTitle").value = entry.title;
-            document.getElementById("editThoughts").value = entry.thoughts;
-            document.getElementById("editTags").value = entry.tags;
-        } else {
-            alert("No entry found to edit.");
-            window.location.href = "index.html";
-        }
-
-        function saveEditedEntry() {
-            if (entryIndex !== null && entries[entryIndex]) {
-                entries[entryIndex].title = document.getElementById("editTitle").value;
-                entries[entryIndex].thoughts = document.getElementById("editThoughts").value;
-                entries[entryIndex].tags = document.getElementById("editTags").value;
-                entries[entryIndex].date = new Date().toLocaleString(); // Update timestamp
-                localStorage.setItem("journalEntries", JSON.stringify(entries));
-                localStorage.removeItem("editingEntryIndex");
-                window.location.href = "index.html";
+            if (!title || !thoughts) {
+                alert("Title and thoughts cannot be empty.");
+                return;
             }
+
+            let entry = { title, thoughts, tags, date };
+            let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
+            entries.push(entry);
+            localStorage.setItem("journalEntries", JSON.stringify(entries));
+            loadEntries();
         }
 
-        function cancelEdit() {
-            localStorage.removeItem("editingEntryIndex");
-            window.location.href = "index.html";
+        function loadEntries() {
+            let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
+            let entriesDiv = document.getElementById("entries");
+            entriesDiv.innerHTML = "";
+            entries.forEach((entry, index) => {
+                let div = document.createElement("div");
+                div.classList.add("entry");
+                div.innerHTML = `<h3>${entry.title}</h3>
+                                 <p>${entry.date}</p>
+                                 <p>${entry.thoughts}</p>
+                                 <p><strong>Tags:</strong> ${entry.tags}</p>
+                                 <button onclick="editEntry(${index})">Edit</button>`;
+                entriesDiv.appendChild(div);
+            });
         }
+
+        function editEntry(index) {
+            localStorage.setItem("editingEntryIndex", index);
+            window.location.href = "write.html";
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+
+        document.addEventListener("DOMContentLoaded", loadEntries);
     </script>
 </body>
 </html>
