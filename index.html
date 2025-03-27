@@ -86,7 +86,10 @@
             </div>
             <input type="text" id="tags" placeholder="Tags (comma separated)">
             <button onclick="saveEntry()">Save</button>
+            <button onclick="exportEntries()">Export JSON</button>
+            <button onclick="importEntries()">Import JSON</button>
             <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+            <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)">
         </div>
     </div>
     <script>
@@ -111,9 +114,6 @@
             let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
             entries.push(entry);
             localStorage.setItem("journalEntries", JSON.stringify(entries));
-            document.getElementById("title").value = "";
-            document.getElementById("thoughts").value = "";
-            document.getElementById("tags").value = "";
             loadEntries();
         }
 
@@ -127,38 +127,38 @@
                 div.innerHTML = `<h3>${entry.title} ${entry.mood}</h3>
                                  <p>${entry.date}</p>
                                  <p>${entry.thoughts}</p>
-                                 <p><strong>Tags:</strong> ${entry.tags}</p>
-                                 <button onclick="deleteEntry(${index})">Delete</button>`;
-                gsap.from(div, { opacity: 0, y: 20, duration: 0.5 });
+                                 <p><strong>Tags:</strong> ${entry.tags}</p>`;
                 entriesDiv.appendChild(div);
             });
         }
 
-        function deleteEntry(index) {
-            let entries = JSON.parse(localStorage.getItem("journalEntries"));
-            entries.splice(index, 1);
-            localStorage.setItem("journalEntries", JSON.stringify(entries));
-            loadEntries();
+        function exportEntries() {
+            let entries = localStorage.getItem("journalEntries");
+            let blob = new Blob([entries], { type: "application/json" });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "journal_entries.json";
+            a.click();
         }
 
-        function filterEntries() {
-            let query = document.getElementById("search").value.toLowerCase();
-            let entries = document.getElementsByClassName("entry");
-            Array.from(entries).forEach(entry => {
-                entry.style.display = entry.innerText.toLowerCase().includes(query) ? "block" : "none";
-            });
+        function importEntries() {
+            document.getElementById("fileInput").click();
+        }
+
+        function handleFileUpload(event) {
+            let file = event.target.files[0];
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                localStorage.setItem("journalEntries", e.target.result);
+                loadEntries();
+            };
+            reader.readAsText(file);
         }
 
         function toggleDarkMode() {
             document.body.classList.toggle("dark-mode");
         }
 
-        async function fetchQuote() {
-            let response = await fetch("https://api.quotable.io/random");
-            let data = await response.json();
-            document.getElementById("quote").innerText = data.content;
-        }
-        fetchQuote();
         document.addEventListener("DOMContentLoaded", loadEntries);
     </script>
 </body>
