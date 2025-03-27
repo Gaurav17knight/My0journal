@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Journal Entry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Patrick Hand', cursive;
+            background: #f5f5dc;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Edit Entry</h2>
+        <input type="text" id="editTitle" placeholder="Title">
+        <textarea id="editThoughts" placeholder="Write your thoughts..."></textarea>
+        <input type="text" id="editTags" placeholder="Tags (comma separated)">
+        <button onclick="saveEditedEntry()">Save Changes</button>
+        <button onclick="cancelEdit()">Cancel</button>
+    </div>
+    <script>
+        let entryIndex = localStorage.getItem("editingEntryIndex");
+        let entries = JSON.parse(localStorage.getItem("journalEntries")) || [];
+
+        if (entryIndex !== null) {
+            let entry = entries[entryIndex];
+            document.getElementById("editTitle").value = entry.title;
+            document.getElementById("editThoughts").value = entry.thoughts;
+            document.getElementById("editTags").value = entry.tags;
+        }
+
+        function saveEditedEntry() {
+            if (entryIndex !== null) {
+                entries[entryIndex].title = document.getElementById("editTitle").value;
+                entries[entryIndex].thoughts = document.getElementById("editThoughts").value;
+                entries[entryIndex].tags = document.getElementById("editTags").value;
+                localStorage.setItem("journalEntries", JSON.stringify(entries));
+                localStorage.removeItem("editingEntryIndex");
+                window.location.href = "index.html";
+            }
+        }
+
+        function cancelEdit() {
+            localStorage.removeItem("editingEntryIndex");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
